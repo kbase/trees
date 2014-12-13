@@ -145,7 +145,7 @@ deploy: deploy-all
 deploy-all: deploy-client deploy-service deploy-scripts deploy-docs
 	echo "OK... Done deploying ALL artifacts (includes clients, docs, scripts and service) of $(SERVICE)."
 	
-deploy-client:
+deploy-client: compile-typespec jar
 	mkdir -p $(TARGET)/lib/Bio/KBase/$(SERVICE_NAME)
 	mkdir -p $(TARGET)/lib/biokbase/$(SERVICE_NAME)
 	mkdir -p $(TARGET)/lib/javascript/$(SERVICE_NAME)
