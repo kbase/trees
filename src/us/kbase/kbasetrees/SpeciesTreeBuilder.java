@@ -119,12 +119,12 @@ public class SpeciesTreeBuilder extends DefaultTaskBuilder<ConstructSpeciesTreeP
 		    }
 		}
 		Tree tree = placeUserGenomes(token, genomeRefs, useCog103Only, false,
-				(int)nearestGenomeCount);
+				(int)nearestGenomeCount, createDefaultGenomeProvider());
 		String id = outRef.substring(outRef.indexOf('/') + 1);
 		saveResult(inputData.getOutWorkspace(), id, token, tree, inputData);
 	}
 	
-	private void saveResult(String ws, String id, String token, Tree res,
+	protected void saveResult(String ws, String id, String token, Tree res,
 			ConstructSpeciesTreeParams inputData) throws Exception {
 		Map<String, String> meta = new LinkedHashMap<String, String>();
 		meta.put("type", SPECIES_TREE_TYPE);
@@ -456,13 +456,14 @@ public class SpeciesTreeBuilder extends DefaultTaskBuilder<ConstructSpeciesTreeP
 	}
 
 	public Tree placeUserGenomes(String token, List<String> genomeRefList, 
-			boolean useCog103Only, boolean userGenomesOnly, int nearestGenomeCount) throws Exception {
+			boolean useCog103Only, boolean userGenomesOnly, int nearestGenomeCount,
+			GenomeProvider genomeProvider) throws Exception {
 		Map<String, String> idLabelMap = new TreeMap<String, String>();
 		Map<String, Map<String, List<String>>> idRefMap = new TreeMap<String, Map<String, List<String>>>();
 		Set<String> seeds = new HashSet<String>();
 
 		Map<String, String> concat = placeUserGenomesIntoAlignment(token,
-				genomeRefList, useCog103Only, idLabelMap, idRefMap, seeds);
+				genomeRefList, useCog103Only, idLabelMap, idRefMap, seeds, genomeProvider);
 		
 		// Filtering
 		Set<String> nearestNodes = new HashSet<String>();
@@ -544,7 +545,8 @@ public class SpeciesTreeBuilder extends DefaultTaskBuilder<ConstructSpeciesTreeP
 	public Map<String, String> placeUserGenomesIntoAlignment(String token,
 			List<String> genomeRefList, boolean useCog103Only,
 			Map<String, String> idLabelMap,
-			Map<String, Map<String, List<String>>> idRefMap, Set<String> seeds)
+			Map<String, Map<String, List<String>>> idRefMap, Set<String> seeds,
+			GenomeProvider genomeProvider)
 			throws IOException {
 		Map<String, Map<String, String>> cogAlignments = new LinkedHashMap<String, Map<String, String>>();
 		for (String cogCode : loadCogsCodes(useCog103Only)) 
@@ -553,8 +555,7 @@ public class SpeciesTreeBuilder extends DefaultTaskBuilder<ConstructSpeciesTreeP
 		for (String genomeRef : genomeRefList) {
 			Genome genome = null;
 			try {
-				genome = storage.getObjects(token, Arrays.asList(
-						new ObjectIdentity().withRef(genomeRef))).get(0).getData().asClassInstance(Genome.class);
+				genome = genomeProvider.loadGenome(token, genomeRef);
 				userData.add(alignGenomeProteins(token, genomeRef, genome, useCog103Only, cogAlignments));
 			} catch (Exception ex) {
 				String genomeName = genome == null ? genomeRef : genome.getScientificName();
@@ -679,8 +680,22 @@ public class SpeciesTreeBuilder extends DefaultTaskBuilder<ConstructSpeciesTreeP
 		}
 	}
 	
+	public GenomeProvider createDefaultGenomeProvider() {
+	    return new GenomeProvider() {
+            @Override
+            public Genome loadGenome(String token, String genomeRef) throws Exception {
+                return storage.getObjects(token, Arrays.asList(
+                        new ObjectIdentity().withRef(genomeRef))).get(0).getData().asClassInstance(Genome.class);
+            }
+        };
+	}
+	
 	public static interface RpsBlastCallback {
 		public void next(String query, String subj, int qstart, String qseq, int sstart, String sseq, 
 				String evalue, double bitscore, double ident) throws Exception;
+	}
+	
+	public static interface GenomeProvider {
+	    public Genome loadGenome(String token, String genomeRef) throws Exception;
 	}
 }

@@ -39,7 +39,8 @@ public class CloseGenomesFinder {
 				new TreeMap<String, Map<String, List<String>>>();
 		Set<String> seeds = new HashSet<String>();
 		Map<String, String> concat = stb.placeUserGenomesIntoAlignment(token, 
-				Arrays.asList(params.getQueryGenome()), true, idLabelMap, idRefMap, seeds);
+				Arrays.asList(params.getQueryGenome()), true, idLabelMap, idRefMap, seeds,
+				stb.createDefaultGenomeProvider());
 		List<Tuple2<String, Integer>> kbIdToMinDist = stb.sortPublicGenomesByMismatches(
 				seeds, concat, stopOnZeroDist);
 		Map<String, String> kbToRefs = stb.loadGenomeKbToRefs(token);

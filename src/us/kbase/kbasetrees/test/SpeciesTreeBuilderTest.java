@@ -47,7 +47,7 @@ public class SpeciesTreeBuilderTest {
 		SpeciesTreeBuilder stb = new SpeciesTreeBuilder().init(
 				new File("temp_files"), new File("data"), SpeciesTreeBuilder.createDefaultObjectStorage(ws2url));
 		String token = AuthService.login(userId, pwd).getTokenString();
-		Tree tree = stb.placeUserGenomes(token, genomeRefs, true, false, 4);
+		Tree tree = stb.placeUserGenomes(token, genomeRefs, true, false, 4, stb.createDefaultGenomeProvider());
 		System.out.println(tree.getTree());
 	}
 	
